@@ -1,3 +1,3 @@
-class SudokuSolver(object):
+class SudokuSolver:
 	def __init__(self):
 		pass

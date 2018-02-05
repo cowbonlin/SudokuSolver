@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-class Sudoku(object):
+class Sudoku:
 	def __init__(self):
 		self.cells = list()
 	
