@@ -1,5 +1,6 @@
-import requests
+from requests import post
 from bs4 import BeautifulSoup
+from SudokuSolver.Cell import Cell
 
 class Sudoku:
     def __init__(self):
@@ -7,7 +8,7 @@ class Sudoku:
         self.cells = [0, 0, 0, 0, 0, 0, 7, 0, 1, 0, 6, 0, 5, 0, 0, 9, 4, 3, 4, 2, 0, 0, 1, 0, 0, 8, 0, 5, 0, 4, 7, 8, 0, 0, 6, 0, 0, 8, 6, 0, 4, 0, 0, 0, 7, 0, 7, 2, 6, 9, 0, 0, 0, 8, 2, 0, 3, 8, 7, 6, 5, 0, 0, 6, 9, 0, 0, 0, 1, 8, 0, 0, 0, 0, 0, 2, 0, 0, 3, 0, 0]
     
     def load(self, source="internet"):
-        page = requests.post("http://www.sudokuweb.org/", data={"sign2":"9x9"}).text
+        page = post("http://www.sudokuweb.org/", data={"sign2":"9x9"}).text
         soup = BeautifulSoup(page, 'html.parser')
 
         for index, td in enumerate(soup.find_all('td')):
@@ -16,57 +17,81 @@ class Sudoku:
             else:
                 self.cells.append(0)
     
-    def fill(self, region_type, indexBig, indexSmall, digit):
+    def fill(self, region_type, indexGrid, indexCell, digit):
         assert (region_type in ('row', 'col', 'box')), "Invalid region_type"
-        assert (0 <= indexBig <= 8), "Invalid indexBig"
-        assert (indexSmall is None or 0 <= indexSmall <= 8), "Invalid indexSmall"
+        assert (0 <= indexGrid <= 8), "Invalid indexGrid"
+        assert (indexCell is None or 0 <= indexCell <= 8), "Invalid indexCell"
         
-        row, col = self.getRowIndex(region_type, indexBig, indexSmall)
+        rowIndex = self.convert(region_type, 'row', indexGrid, indexCell)
+        colIndex = self.convert(region_type, 'col', indexGrid, indexCell)
+        boxIndex = self.convert(region_type, 'box', indexGrid, indexCell)
         
-        # if digit in self.get('row', row):
+        self.cells[rowIndex[0] * 9 + rowIndex[1]] = digit
+        self.print(rowIndex[0], rowIndex[1])
         
-        self.cells[row * 9 + col] = digit
-        self.print(row, col)
-        
-    def get(self, region_type, indexBig, indexSmall=None):
+    def get(self, region_type, indexGrid, indexCell=None):
         assert (region_type in ('row', 'col', 'box')), "Invalid region_type"
-        assert (0 <= indexBig <= 8), "Invalid indexBig"
-        assert (indexSmall is None or 0 <= indexSmall <= 8), "Invalid indexSmall"
+        assert (0 <= indexGrid <= 8), "Invalid indexGrid"
+        assert (indexCell is None or 0 <= indexCell <= 8), "Invalid indexCell"
         
         if region_type == 'row':
-            if indexSmall is None:
-                return self.cells[indexBig * 9 : indexBig * 9 + 9]
-            return self.cells[indexBig * 9 + indexSmall]
+            if indexCell is None:
+                return self.cells[indexGrid * 9 : indexGrid * 9 + 9]
+            return self.cells[indexGrid * 9 + indexCell]
         
         elif region_type == 'col':
             result_list= list()
             for index, cell in enumerate(self.cells):
-                if index % 9 == indexBig:
+                if index % 9 == indexGrid:
                     result._listappend(cell)
-            if indexSmall is None:
+            if indexCell is None:
                 return result_list
-            return result_list[indexSmall]
+            return result_list[indexCell]
         
         elif region_type == 'box':
             result_list = list()
-            row_range = (indexBig//3*3, indexBig//3*3+1, indexBig//3*3+2)
-            col_range = (indexBig%3*3, indexBig%3*3+1, indexBig%3*3+2)
+            row_range = (indexGrid//3*3, indexGrid//3*3+1, indexGrid//3*3+2)
+            col_range = (indexGrid%3*3, indexGrid%3*3+1, indexGrid%3*3+2)
             for index, cell in enumerate(self.cells):
                 if index % 9 in col_range and index // 9 in row_range:
                     result_list.append(cell)
-            if indexSmall is None:
+            if indexCell is None:
                 return result_list
-            return result_list[indexSmall]
+            return result_list[indexCell]
     
-    def getRowIndex(self, region_type, indexBig, indexSmall):
-        if region_type == 'row':
-            return indexBig, indexSmall
-        elif region_type == 'col':
-            return indexSmall, indexBig
-        elif region_type == 'box':
-            row = indexBig // 3 * 3 + indexSmall // 3
-            col = indexBig % 3 * 3 + indexSmall % 3
-            return row, col
+    def convert(self, fromHouse, toHouse, indexGrid, indexCell):
+        if toHouse == 'row':
+            if fromHouse == 'row':
+                return indexGrid, indexCell
+            elif fromHouse == 'col':
+                return indexCell, indexGrid
+            elif fromHouse == 'box':
+                newIndexGrid = indexGrid // 3 * 3 + indexCell // 3
+                newIndexCell = indexGrid % 3 * 3 + indexCell % 3
+                return newIndexGrid, newIndexCell
+        
+        elif toHouse == 'col':
+            if fromHouse == 'row':
+                return indexCell, indexGrid
+            elif fromHouse == 'col':
+                return indexGrid, indexCell
+            elif fromHouse == 'box':
+                newIndexGrid = indexGrid % 3 * 3 + indexCell % 3
+                newIndexCell = indexGrid // 3 * 3 + indexCell // 3
+                return newIndexGrid, newIndexCell
+        
+        elif toHouse == 'box':
+            if fromHouse == 'row':
+                newIndexGrid = indexGrid // 3 * 3 + indexCell // 3
+                newIndexCell = indexGrid % 3 * 3 + indexCell % 3
+                return newIndexGrid, newIndexCell
+            elif fromHouse == 'col':
+                newIndexGrid = indexCell // 3 * 3 + indexGrid // 3
+                newIndexCell = indexCell % 3 * 3 + indexGrid % 3
+                return newIndexGrid, newIndexCell
+            elif fromHouse == 'box':
+                return indexGrid, indexCell
+        
     
     def print(self, row=None, col=None):
         print(' ' * ((col//3)*8+2 + (col%3)*2+1 + 1) + "*" if col is not None else '')
