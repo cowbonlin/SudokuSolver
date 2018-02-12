@@ -4,94 +4,89 @@ from SudokuSolver.Cell import Cell
 
 class Sudoku:
     def __init__(self):
-        # self.cells = list()
-        self.cells = [0, 0, 0, 0, 0, 0, 7, 0, 1, 0, 6, 0, 5, 0, 0, 9, 4, 3, 4, 2, 0, 0, 1, 0, 0, 8, 0, 5, 0, 4, 7, 8, 0, 0, 6, 0, 0, 8, 6, 0, 4, 0, 0, 0, 7, 0, 7, 2, 6, 9, 0, 0, 0, 8, 2, 0, 3, 8, 7, 6, 5, 0, 0, 6, 9, 0, 0, 0, 1, 8, 0, 0, 0, 0, 0, 2, 0, 0, 3, 0, 0]
+        self.cells = list()
+        for index in range(81):
+            cell = Cell()
+            cell.index_update(index)
+            self.cells.append(cell)
     
-    def load(self, source="internet"):
-        page = post("http://www.sudokuweb.org/", data={"sign2":"9x9"}).text
-        soup = BeautifulSoup(page, 'html.parser')
+    def load(self, source='internet'):
+        if source == 'internet':
+            page = post("http://www.sudokuweb.org/", data={"sign2":"9x9"}).text
+            soup = BeautifulSoup(page, 'html.parser')
 
-        for index, td in enumerate(soup.find_all('td')):
-            if td.span['class'][0] == 'sedy':
-                self.cells.append(int(td.span.text))
-            else:
-                self.cells.append(0)
+            for index, td in enumerate(soup.find_all('td')):
+                if td.span['class'][0] == 'sedy':
+                    self.cells.append(int(td.span.text))
+                else:
+                    self.cells.append(0)
+        
+        elif source == 'test':
+            testing_data = [0, 0, 0, 0, 0, 0, 7, 2, 1, 0, 6, 0, 5, 0, 0, 9, 4, 3, 4, 2, 0, 0, 1, 0, 0, 8, 5, 5, 0, 4, 7, 8, 0, 0, 6, 0, 0, 8, 6, 0, 4, 0, 0, 0, 7, 0, 7, 2, 6, 9, 0, 0, 0, 8, 2, 0, 3, 8, 7, 6, 5, 0, 0, 6, 9, 0, 0, 0, 1, 8, 0, 0, 0, 0, 0, 2, 0, 0, 3, 0, 0]
+            for index, (cell, data) in enumerate(zip(self.cells, testing_data)):
+                if data != 0:
+                    cell.value = data
+                    cell.is_clue = True
     
-    def fill(self, region_type, indexGrid, indexCell, digit):
-        assert (region_type in ('row', 'col', 'box')), "Invalid region_type"
-        assert (0 <= indexGrid <= 8), "Invalid indexGrid"
-        assert (indexCell is None or 0 <= indexCell <= 8), "Invalid indexCell"
+    def fill(self, house_type, index_grid, index_cell, digit):
+        assert (house_type in ('row', 'col', 'box')), "Invalid house_type"
+        assert (0 <= index_grid <= 8), "Invalid index_grid"
+        assert (index_cell is None or 0 <= index_cell <= 8), "Invalid index_cell"
         
-        rowIndex = self.convert(region_type, 'row', indexGrid, indexCell)
-        colIndex = self.convert(region_type, 'col', indexGrid, indexCell)
-        boxIndex = self.convert(region_type, 'box', indexGrid, indexCell)
+        try:
+            cell = self.find_cell(house_type, index_grid, index_cell)
+            self.check_request(cell, digit)
+            cell.value = digit
+            self.print(cell.row[0], cell.row[1])
+        except ValueError as e:
+            raise ValueError('invalid digit: {} in [{},{}], {}'.format(digit, cell.row[0], cell.row[1], e))
         
-        self.cells[rowIndex[0] * 9 + rowIndex[1]] = digit
-        self.print(rowIndex[0], rowIndex[1])
+    def find_cell(self, house_type, index_grid, index_cell):
+        for cell in self.cells:
+            if getattr(cell, house_type) == [index_grid, index_cell]:
+                return cell
+        raise IndexError
+    
+    def check_request(self, cell, digit):
+        for c in self.get('row', cell.row[0]):
+            if digit == c.value:
+                raise ValueError('row')
+        for c in self.get('col', cell.col[0]):
+            if digit == c.value:
+                raise ValueError('col')
+        for c in self.get('box', cell.box[0]):
+            if digit == c.value:
+                raise ValueError('box')
+    
+    def get(self, house_type, index_grid, index_cell=None):
+        assert (house_type in ('row', 'col', 'box')), "Invalid house_type"
+        assert (0 <= index_grid <= 8), "Invalid index_grid"
+        assert (index_cell is None or 0 <= index_cell <= 8), "Invalid index_cell"
         
-    def get(self, region_type, indexGrid, indexCell=None):
-        assert (region_type in ('row', 'col', 'box')), "Invalid region_type"
-        assert (0 <= indexGrid <= 8), "Invalid indexGrid"
-        assert (indexCell is None or 0 <= indexCell <= 8), "Invalid indexCell"
+        if house_type == 'row':
+            if index_cell is None:
+                return self.cells[index_grid * 9 : index_grid * 9 + 9]
+            return self.cells[index_grid * 9 + index_cell]
         
-        if region_type == 'row':
-            if indexCell is None:
-                return self.cells[indexGrid * 9 : indexGrid * 9 + 9]
-            return self.cells[indexGrid * 9 + indexCell]
-        
-        elif region_type == 'col':
+        elif house_type == 'col':
             result_list= list()
             for index, cell in enumerate(self.cells):
-                if index % 9 == indexGrid:
-                    result._listappend(cell)
-            if indexCell is None:
+                if index % 9 == index_grid:
+                    result_list.append(cell)
+            if index_cell is None:
                 return result_list
-            return result_list[indexCell]
+            return result_list[index_cell]
         
-        elif region_type == 'box':
+        elif house_type == 'box':
             result_list = list()
-            row_range = (indexGrid//3*3, indexGrid//3*3+1, indexGrid//3*3+2)
-            col_range = (indexGrid%3*3, indexGrid%3*3+1, indexGrid%3*3+2)
+            row_range = (index_grid//3*3, index_grid//3*3+1, index_grid//3*3+2)
+            col_range = (index_grid%3*3, index_grid%3*3+1, index_grid%3*3+2)
             for index, cell in enumerate(self.cells):
                 if index % 9 in col_range and index // 9 in row_range:
                     result_list.append(cell)
-            if indexCell is None:
+            if index_cell is None:
                 return result_list
-            return result_list[indexCell]
-    
-    def convert(self, fromHouse, toHouse, indexGrid, indexCell):
-        if toHouse == 'row':
-            if fromHouse == 'row':
-                return indexGrid, indexCell
-            elif fromHouse == 'col':
-                return indexCell, indexGrid
-            elif fromHouse == 'box':
-                newIndexGrid = indexGrid // 3 * 3 + indexCell // 3
-                newIndexCell = indexGrid % 3 * 3 + indexCell % 3
-                return newIndexGrid, newIndexCell
-        
-        elif toHouse == 'col':
-            if fromHouse == 'row':
-                return indexCell, indexGrid
-            elif fromHouse == 'col':
-                return indexGrid, indexCell
-            elif fromHouse == 'box':
-                newIndexGrid = indexGrid % 3 * 3 + indexCell % 3
-                newIndexCell = indexGrid // 3 * 3 + indexCell // 3
-                return newIndexGrid, newIndexCell
-        
-        elif toHouse == 'box':
-            if fromHouse == 'row':
-                newIndexGrid = indexGrid // 3 * 3 + indexCell // 3
-                newIndexCell = indexGrid % 3 * 3 + indexCell % 3
-                return newIndexGrid, newIndexCell
-            elif fromHouse == 'col':
-                newIndexGrid = indexCell // 3 * 3 + indexGrid // 3
-                newIndexCell = indexCell % 3 * 3 + indexGrid % 3
-                return newIndexGrid, newIndexCell
-            elif fromHouse == 'box':
-                return indexGrid, indexCell
-        
+            return result_list[index_cell]
     
     def print(self, row=None, col=None):
         print(' ' * ((col//3)*8+2 + (col%3)*2+1 + 1) + "*" if col is not None else '')
@@ -102,7 +97,7 @@ class Sudoku:
             if index % 9 == 0:
                 print("|" ,end=' ')
             
-            print(cell or "_", end=' ')
+            print(cell.value or "_", end=' ')
             
             if index % 3 == 2:
                 print("|", end=' ')

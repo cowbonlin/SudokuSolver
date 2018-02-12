@@ -1,3 +1,3 @@
 class SudokuSolver:
-	def __init__(self):
-		pass
+	def __init__(self, sudoku):
+		self.sudoku = sudoku
