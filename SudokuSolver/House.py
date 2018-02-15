@@ -9,7 +9,7 @@ class House:
 	
 	
 	def __getitem__(self, key):
-		assert (0 <= key <= 8), 'invalid key value'
+		assert (0 <= key <= 8), 'invalid key value: {}'.format(key)
 		return self.cells[key]
 	
 	
@@ -17,3 +17,11 @@ class House:
 		for cell in self.sudoku.cells:
 			if getattr(cell, self.type)[0] == self.index:
 				self.cells.append(cell)
+				
+				
+	def remain_number(self):
+		result = 0
+		for cell in self.cells:
+			if cell.value is None:
+				result += 1
+		return result

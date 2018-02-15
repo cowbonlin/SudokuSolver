@@ -3,15 +3,13 @@ from SudokuSolver.SudokuSolver import SudokuSolver
 
 s = Sudoku()
 s.load(source='test')
-print(s.rowes[1][8])
-print(s.rowes[1][6])
-print(s.boxes[8][6])
-print(s.coles[3].cells)
-
 s.print()
+# s.fill('box', 0, 0, 8)
+# s.fill('box', 0, 1, 3)
+# print(s.row[0][1])
 
 solver = SudokuSolver(s)
-# solver.lastDigit()
+solver.last_digit()
 
 # try:
 # 	n.fill('row', 0, 1, 7)

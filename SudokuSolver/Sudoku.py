@@ -5,14 +5,10 @@ from SudokuSolver.House import House
 
 class Sudoku:
     def __init__(self):
-        self.cells = list()
-        self.boxes = [ House('box', i, self) for i in range(9) ]
-        self.coles = [ House('col', i, self) for i in range(9) ]
-        self.rowes = [ House('row', i, self) for i in range(9) ]
-        for index in range(81):
-            cell = Cell()
-            cell.index_update(index)
-            self.cells.append(cell)
+        self.cells = [ Cell(index) for index in range(81) ]
+        self.box = [ House('box', i, self) for i in range(9) ]
+        self.col = [ House('col', i, self) for i in range(9) ]
+        self.row = [ House('row', i, self) for i in range(9) ]
     
     
     def load(self, source='internet'):
@@ -30,9 +26,9 @@ class Sudoku:
                 if data != 0:
                     cell.value = data
                     cell.is_clue = True
-        [ box.update() for box in self.boxes ]
-        [ col.update() for col in self.coles ]
-        [ row.update() for row in self.rowes ]
+        [ box.update() for box in self.box ]
+        [ col.update() for col in self.col ]
+        [ row.update() for row in self.row ]
     
     
     def fill(self, house_type, index_grid, index_cell, digit):
@@ -40,13 +36,10 @@ class Sudoku:
         assert (0 <= index_grid <= 8), "Invalid index_grid"
         assert (index_cell is None or 0 <= index_cell <= 8), "Invalid index_cell"
         
-        try:
-            cell = self.find_cell(house_type, index_grid, index_cell)
-            self.check_request(cell, digit)
-            cell.value = digit
-            self.print(cell.row[0], cell.row[1])
-        except ValueError as e:
-            raise ValueError('invalid digit: {} in [{},{}], {}'.format(digit, cell.row[0], cell.row[1], e))
+        cell = self.find_cell(house_type, index_grid, index_cell)
+        self.check_fill(cell, digit)
+        cell.value = digit
+        self.print(cell.row[0], cell.row[1])
       
         
     def find_cell(self, house_type, index_grid, index_cell):
@@ -56,45 +49,16 @@ class Sudoku:
         raise IndexError
     
     
-    def check_request(self, cell, digit):
-        for c in self.get('row', cell.row[0]):
+    def check_fill(self, cell, digit):
+        for c in self.row[cell.row[0]].cells:
             if digit == c.value:
-                raise ValueError('row')
-        for c in self.get('col', cell.col[0]):
+                raise ValueError('Invalid Input: row[{}][{}] with number {}'.format(c.row[0], c.row[1], c.value))
+        for c in self.col[cell.col[0]].cells:
             if digit == c.value:
-                raise ValueError('col')
-        for c in self.get('box', cell.box[0]):
+                raise ValueError('Invalid Input: col[{}][{}] with number {}'.format(c.col[0], c.col[1], c.value))
+        for c in self.box[cell.box[0]].cells:
             if digit == c.value:
-                raise ValueError('box')
-    
-    
-    def row(self, index_row, index_cell=None):
-        assert (0 <= index_row <= 8 or 0 <= index_cell <= 8), "Invalid input"
-        if index_cell is None:
-            return self.cells[index_row * 9 : index_row * 9 + 9]
-        return self.cells[index_row * 9 + index_cell]
-    
-    
-    def col(self, index_col, index_cell=None):
-        assert (0 <= index_col <= 8 or 0 <= index_cell <= 8), "Invalid input"
-        result_list = list()
-        for cell in self.cells:
-            if cell.col[0] == index_col:
-                result_list.append(cell)
-        if index_cell is None:
-            return result_list
-        return result_list[index_cell]
-    
-    
-    def box(self, index_box, index_cell=None):
-        assert (0 <= index_box <= 8 or 0 <= index_cell <= 8), "Invalid input"
-        result_list = list()
-        for cell in self.cells:
-            if cell.box[0] == index_box:
-                result_list.append(cell)
-        if index_cell is None:
-            return result_list
-        return result_list[index_cell]
+                raise ValueError('Invalid Input: box[{}][{}] with number {}'.format(c.box[0], c.box[1], c.value))
         
     
     def print(self, row=None, col=None):
