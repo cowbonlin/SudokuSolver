@@ -36,17 +36,10 @@ class Sudoku:
         assert (0 <= index_grid <= 8), "Invalid index_grid"
         assert (index_cell is None or 0 <= index_cell <= 8), "Invalid index_cell"
         
-        cell = self.find_cell(house_type, index_grid, index_cell)
+        cell = getattr(self, house_type)[index_grid][index_cell]
         self.check_fill(cell, digit)
         cell.value = digit
         self.print(cell.row[0], cell.row[1])
-      
-        
-    def find_cell(self, house_type, index_grid, index_cell):
-        for cell in self.cells:
-            if getattr(cell, house_type) == [index_grid, index_cell]:
-                return cell
-        raise IndexError
     
     
     def check_fill(self, cell, digit):
