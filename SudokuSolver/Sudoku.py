@@ -15,11 +15,12 @@ class Sudoku:
         if source == 'internet':
             page = post("http://www.sudokuweb.org/", data={"sign2":"9x9"}).text
             soup = BeautifulSoup(page, 'html.parser')
-            for index, td in enumerate(soup.find_all('td')):
-                if td.span['class'][0] == 'sedy':
-                    self.cells.append(int(td.span.text))
-                else:
-                    self.cells.append(0)
+            for index, (cell, td) in enumerate(zip(self.cells, soup.find_all('td'))):
+                data = int(td.span.text) if td.span['class'][0] == 'sedy' else 0
+                if data != 0:
+                    cell.value = data
+                    cell.is_clue = True
+
         elif source == 'test':
             testing_data = [0, 0, 0, 0, 0, 0, 7, 2, 1, 0, 6, 0, 5, 0, 0, 9, 4, 3, 4, 2, 0, 0, 1, 0, 0, 8, 5, 5, 0, 4, 7, 8, 0, 0, 6, 0, 0, 8, 6, 0, 4, 0, 0, 0, 7, 0, 7, 2, 6, 9, 0, 0, 0, 8, 2, 0, 3, 8, 7, 6, 5, 0, 0, 6, 9, 0, 0, 0, 1, 8, 0, 0, 0, 0, 0, 2, 0, 0, 3, 0, 0]
             for index, (cell, data) in enumerate(zip(self.cells, testing_data)):
