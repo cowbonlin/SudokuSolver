@@ -5,19 +5,6 @@ class Node:
 		self.value = value
 		self.is_root = is_root
 		self.children = []
-	
-	def get_children(self):
-		next_index = 0 if self.is_root else self.cell.index + 1
-		while self.sudoku.cells[next_index].is_clue:
-			next_index += 1
-			if next_index == 81:
-				print("Puzzle Solved!!")
-				return 'solved'
-		target_cell = self.sudoku.cells[next_index]
-		
-		for candidate in self.sudoku.candidate_value(target_cell):
-			new_node = Node(self.sudoku, target_cell, candidate)
-			self.children.append(new_node)
 		
 	def start(self):
 		print("Start: {} {}".format('root' if self.is_root else self.cell.row, self.value))
@@ -47,7 +34,19 @@ class Node:
 		else:
 			child.start()
 			
-	
+	def get_children(self):
+		next_index = 0 if self.is_root else self.cell.index + 1
+		while self.sudoku.cells[next_index].is_clue:
+			next_index += 1
+			if next_index == 81:
+				print("Puzzle Solved!!")
+				return 'solved'
+		target_cell = self.sudoku.cells[next_index]
+		
+		for candidate in self.sudoku.candidate_value(target_cell):
+			new_node = Node(self.sudoku, target_cell, candidate)
+			self.children.append(new_node)
+
 
 class SudokuSolver:
 	def __init__(self, sudoku):
@@ -58,10 +57,6 @@ class SudokuSolver:
 		root_node.get_children()
 		root_node.start()
 		
-		
-		
-				
-				
 	def last_digit(self):
 		for box in self.sudoku.box:
 			if box.remain_number() == 1:
