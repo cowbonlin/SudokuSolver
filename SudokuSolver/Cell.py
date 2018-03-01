@@ -6,6 +6,7 @@ class Cell:
 		self.col = [index%9, index//9]
 		self.box = [self.row[0]//3*3 + self.row[1]//3, \
 					self.row[0] %3*3 + self.row[1] %3 ]
+		self.index = index
 	
 	def __repr__(self):
 		return "<Cell [{},{}]={}>".format(self.row[0], self.row[1], self.value)

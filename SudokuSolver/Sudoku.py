@@ -42,6 +42,17 @@ class Sudoku:
         self.print(cell.row[0], cell.row[1])
     
     
+    def candidate_value(self, cell):
+        candidates = { i for i in range(1, 10) }
+        for c in self.box[cell.box[0]]:
+            candidates.discard(c.value)
+        for c in self.row[cell.row[0]]:
+            candidates.discard(c.value)
+        for c in self.col[cell.col[0]]:
+            candidates.discard(c.value)
+        return candidates
+        
+    
     def check_fill(self, cell, digit):
         for c in self.row[cell.row[0]].cells:
             if digit == c.value:

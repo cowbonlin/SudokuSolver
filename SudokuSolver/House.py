@@ -5,11 +5,11 @@ class House:
 		self.type = type
 		self.index = index
 		self.sudoku = sudoku
-		self.cells = list()
+		self.cells = []
 	
 	
 	def __getitem__(self, key):
-		assert (0 <= key <= 8), 'invalid key value: {}'.format(key)
+		# assert (0 <= key <= 8), 'invalid key value: {}'.format(key)
 		return self.cells[key]
 	
 	
